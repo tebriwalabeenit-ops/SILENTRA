@@ -3,14 +3,18 @@
  * 
  * STRICT ARCHITECTURAL PRINCIPLE:
  * Real hardware data from the physical ESP32 prototype is strictly partitioned
- * from simulated demonstration data. Simulated readings must ALWAYS be explicitly
- * marked with dataOrigin: 'DEMO' and isSimulated: true.
+ * from simulated demonstration data.
+ * - When no verified physical hardware connection is present, the system operates in DEMO mode.
+ * - Hardware sensors are shown as configured/standby, not falsely reported as online.
+ * - No simulated values are presented as real hardware readings.
+ * - No fabricated Wi-Fi RSSI, free heap, uptime, or GPIO health are displayed.
+ * - Acoustic noise measurements are explicitly marked as DEMO / ESTIMATED until calibrated.
  */
 
 import { Floor, Zone, Seat, HardwareDevice, RecentActivity, KpiMetrics } from '../types';
 
 // ==============================================================================
-// 1. REGISTERED PHYSICAL HARDWARE DEVICES
+// 1. REGISTERED PHYSICAL HARDWARE DEVICES (UNCONNECTED / STANDBY STATE)
 // ==============================================================================
 
 export const PHYSICAL_DEVICES: HardwareDevice[] = [
@@ -18,50 +22,51 @@ export const PHYSICAL_DEVICES: HardwareDevice[] = [
     id: "dev-esp32-01",
     deviceCode: "ESP32-DEV-PROTOTYPE-01",
     macAddress: "C8:C9:A3:FB:2E:10",
-    ipAddress: "192.168.1.142",
-    firmwareVersion: "1.0.0-rc1",
+    ipAddress: "Not Assigned (Awaiting Connection)",
+    firmwareVersion: "Configured: v1.0.0-rc1",
     floorId: "floor-1",
-    status: "ONLINE",
-    wifiRssiDbm: -58,
-    freeHeapBytes: 182440,
-    uptimeSeconds: 14280,
-    lastSeenAt: new Date().toISOString(),
+    status: "OFFLINE",
+    connectionStatus: "NOT_CONNECTED",
+    wifiRssiDbm: null, // Strictly null: no fabricated telemetry
+    freeHeapBytes: null, // Strictly null: no fabricated heap
+    uptimeSeconds: null, // Strictly null: no fabricated uptime
+    lastSeenAt: "Awaiting physical handshake",
     assignedSensors: [
       {
         sensorType: "KW11-3Z Microswitch",
         pinOrChannel: "GPIO 14",
         targetDescription: "Seat FL01-ZNA-S001 (Physical Chair #1)",
-        status: "HEALTHY",
+        status: "STANDBY",
       },
       {
         sensorType: "KW11-3Z Microswitch",
         pinOrChannel: "GPIO 27",
         targetDescription: "Seat FL01-ZNA-S002 (Physical Chair #2)",
-        status: "HEALTHY",
+        status: "STANDBY",
       },
       {
         sensorType: "IR Break-beam Pair",
         pinOrChannel: "GPIO 25 & 26",
         targetDescription: "Gate FL01-GATE-01 (Directional Transit)",
-        status: "HEALTHY",
+        status: "STANDBY",
       },
       {
         sensorType: "INMP441 I2S Microphone",
         pinOrChannel: "GPIO 18, 19, 21",
-        targetDescription: "Zone ZN-01A Acoustic Noise Monitor",
-        status: "HEALTHY",
+        targetDescription: "Zone ZN-01A Acoustic Noise Monitor (Uncalibrated)",
+        status: "STANDBY",
       },
       {
         sensorType: "SSD1306 OLED (I2C)",
         pinOrChannel: "GPIO 22 & 23",
         targetDescription: "Local Display Module (Status Telemetry)",
-        status: "HEALTHY",
+        status: "STANDBY",
       },
       {
         sensorType: "Piezo Buzzer (PWM)",
         pinOrChannel: "GPIO 4",
         targetDescription: "Audible Noise Alarm Actuator",
-        status: "HEALTHY",
+        status: "STANDBY",
       },
     ],
   },
@@ -81,8 +86,8 @@ export const INITIAL_FLOORS: Floor[] = [
     maxCapacity: 60,
     currentHeadcount: 24,
     totalSeats: 24,
-    occupiedSeats: 14,
-    availableSeats: 10,
+    occupiedSeats: 13,
+    availableSeats: 11,
     isActive: true,
   },
   {
@@ -114,21 +119,21 @@ export const INITIAL_FLOORS: Floor[] = [
 ];
 
 // ==============================================================================
-// 3. ZONES
+// 3. ZONES (ALL NOISE VALUES EXPLICITLY LABELED AS ESTIMATED / DEMO)
 // ==============================================================================
 
 export const INITIAL_ZONES: Zone[] = [
-  // Floor 1 Zones
   {
     id: "zone-1a",
     floorId: "floor-1",
     zoneCode: "ZN-01A",
-    name: "Quiet Study Carrels (Hardware Monitored)",
+    name: "Quiet Study Carrels (Hardware Target)",
     zoneType: "QUIET",
     noiseThresholdDb: 55.0,
-    currentDecibels: 52.4, // Real sensor reading from INMP441
+    currentDecibels: 52.4,
+    isNoiseEstimated: true, // Labeled estimated: hardware uncalibrated / demo baseline
     capacity: 12,
-    occupiedCount: 7,
+    occupiedCount: 6,
     isViolatingNoise: false,
   },
   {
@@ -138,12 +143,12 @@ export const INITIAL_ZONES: Zone[] = [
     name: "Central Stacks & Reference Desks",
     zoneType: "GENERAL",
     noiseThresholdDb: 62.0,
-    currentDecibels: 56.1, // Simulated
+    currentDecibels: 56.1,
+    isNoiseEstimated: true,
     capacity: 12,
     occupiedCount: 7,
     isViolatingNoise: false,
   },
-  // Floor 2 Zones
   {
     id: "zone-2a",
     floorId: "floor-2",
@@ -152,11 +157,11 @@ export const INITIAL_ZONES: Zone[] = [
     zoneType: "SILENT",
     noiseThresholdDb: 48.0,
     currentDecibels: 42.1,
+    isNoiseEstimated: true,
     capacity: 16,
     occupiedCount: 11,
     isViolatingNoise: false,
   },
-  // Floor 3 Zones
   {
     id: "zone-3a",
     floorId: "floor-3",
@@ -165,6 +170,7 @@ export const INITIAL_ZONES: Zone[] = [
     zoneType: "COLLABORATIVE",
     noiseThresholdDb: 68.0,
     currentDecibels: 61.2,
+    isNoiseEstimated: true,
     capacity: 8,
     occupiedCount: 4,
     isViolatingNoise: false,
@@ -177,6 +183,8 @@ export const INITIAL_ZONES: Zone[] = [
 
 export const INITIAL_SEATS: Seat[] = [
   // --- REAL PHYSICAL HARDWARE PROTOTYPE SEATS (FLOOR 1) ---
+  // Note: Actual occupancy strictly comes from verified physical sensor events.
+  // Manual clicking must NEVER change hardware occupancy.
   {
     id: "seat-fl01-zna-s001",
     floorId: "floor-1",
@@ -192,7 +200,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: true,
     isSimulated: false,
     dataOrigin: "HARDWARE",
-    lastStatusChange: "2026-11-20T01:28:14.000Z",
+    lastStatusChange: "Awaiting physical sensor input",
   },
   {
     id: "seat-fl01-zna-s002",
@@ -205,12 +213,11 @@ export const INITIAL_SEATS: Seat[] = [
     rotationDeg: 0,
     seatType: "CARREL",
     hasPowerOutlet: true,
-    status: "OCCUPIED",
+    status: "AVAILABLE",
     isMonitoredByHardware: true,
     isSimulated: false,
     dataOrigin: "HARDWARE",
-    lastStatusChange: "2026-11-20T01:12:05.000Z",
-    allocatedStudentName: "Marcus Vance (ID: 2024-8841)",
+    lastStatusChange: "Awaiting physical sensor input",
   },
 
   // --- DEMO / SIMULATED SEATS (FLOOR 1: ZONE 1A & 1B) ---
@@ -229,7 +236,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:54:30.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s004",
@@ -246,7 +253,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:05:12.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s005",
@@ -263,7 +270,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:41:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s006",
@@ -280,10 +287,10 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:22:45.000Z",
+    lastStatusChange: "Simulated baseline",
   },
 
-  // Zone 1A Row 2
+  // Zone 1A Row 2 (Demo)
   {
     id: "seat-fl01-zna-s007",
     floorId: "floor-1",
@@ -299,7 +306,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:10:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s008",
@@ -316,7 +323,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:18:22.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s009",
@@ -333,7 +340,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:25:10.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s010",
@@ -350,7 +357,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:30:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s011",
@@ -367,7 +374,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:00:15.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-zna-s012",
@@ -384,10 +391,10 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:45:50.000Z",
+    lastStatusChange: "Simulated baseline",
   },
 
-  // Zone 1B (Desks 13 - 24)
+  // Zone 1B (Desks 13 - 24, all Demo)
   {
     id: "seat-fl01-znb-s013",
     floorId: "floor-1",
@@ -403,7 +410,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:14:10.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s014",
@@ -420,7 +427,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:21:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s015",
@@ -437,7 +444,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:58:30.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s016",
@@ -454,7 +461,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:08:44.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s017",
@@ -471,7 +478,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:02:18.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s018",
@@ -488,7 +495,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:19:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s019",
@@ -505,7 +512,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:50:11.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s020",
@@ -522,7 +529,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:16:33.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s021",
@@ -539,7 +546,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:26:00.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s022",
@@ -556,7 +563,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:23:10.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s023",
@@ -573,7 +580,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T00:35:40.000Z",
+    lastStatusChange: "Simulated baseline",
   },
   {
     id: "seat-fl01-znb-s024",
@@ -590,7 +597,7 @@ export const INITIAL_SEATS: Seat[] = [
     isMonitoredByHardware: false,
     isSimulated: true,
     dataOrigin: "DEMO",
-    lastStatusChange: "2026-11-20T01:27:05.000Z",
+    lastStatusChange: "Simulated baseline",
   },
 
   // --- FLOOR 2 SEATS (ALL DEMO SIMULATED) ---
@@ -613,7 +620,7 @@ export const INITIAL_SEATS: Seat[] = [
       isMonitoredByHardware: false,
       isSimulated: true,
       dataOrigin: "DEMO" as const,
-      lastStatusChange: "2026-11-20T01:00:00.000Z",
+      lastStatusChange: "Simulated baseline",
     };
   }),
 
@@ -637,70 +644,62 @@ export const INITIAL_SEATS: Seat[] = [
       isMonitoredByHardware: false,
       isSimulated: true,
       dataOrigin: "DEMO" as const,
-      lastStatusChange: "2026-11-20T01:15:00.000Z",
+      lastStatusChange: "Simulated baseline",
     };
   }),
 ];
 
 // ==============================================================================
-// 5. RECENT ACTIVITIES FEED (DISTINGUISHING HARDWARE VS DEMO)
+// 5. RECENT ACTIVITIES FEED (STRICT TRANSPARENCY: NO FABRICATED HARDWARE EVENTS)
 // ==============================================================================
 
 export const INITIAL_ACTIVITIES: RecentActivity[] = [
   {
     id: "act-01",
     timestamp: "Just now",
-    type: "SEAT_OCCUPIED",
-    entityId: "FL01-ZNA-S002",
-    description: "Chair microswitch closed (GPIO 27, debounced 1500ms)",
-    dataOrigin: "HARDWARE",
+    type: "HEARTBEAT",
+    entityId: "SYS-INIT",
+    description: "System running in DEMO mode. Physical MQTT broker listener in standby.",
+    dataOrigin: "DEMO",
   },
   {
     id: "act-02",
-    timestamp: "3m ago",
-    type: "ENTRY",
-    entityId: "FL01-GATE-01",
-    description: "North Entrance: Beam A → Beam B transit sequence (Inward)",
+    timestamp: "2m ago",
+    type: "HEARTBEAT",
+    entityId: "ESP32-DEV-PROTOTYPE-01",
+    description: "Physical prototype target registered (MAC: C8:C9:A3:FB:2E:10). Awaiting hardware connection.",
     dataOrigin: "HARDWARE",
   },
   {
     id: "act-03",
-    timestamp: "6m ago",
-    type: "SEAT_VACATED",
-    entityId: "FL01-ZNA-S001",
-    description: "Chair microswitch released (GPIO 14, released 2000ms)",
-    dataOrigin: "HARDWARE",
+    timestamp: "5m ago",
+    type: "ENTRY",
+    entityId: "FL01-GATE-01",
+    description: "Turnstile transit sequence recorded [DEMO simulation]",
+    dataOrigin: "DEMO",
   },
   {
     id: "act-04",
     timestamp: "8m ago",
-    type: "HEARTBEAT",
-    entityId: "ESP32-DEV-PROTOTYPE-01",
-    description: "Diagnostics OK: RSSI -58 dBm · Free heap 182 KB · All 6 sensors healthy",
-    dataOrigin: "HARDWARE",
+    type: "SEAT_OCCUPIED",
+    entityId: "FL01-ZNB-S015",
+    description: "Patron arrival at desk S015 [DEMO simulation]",
+    dataOrigin: "DEMO",
   },
   {
     id: "act-05",
-    timestamp: "12m ago",
-    type: "SEAT_OCCUPIED",
-    entityId: "FL01-ZNB-S015",
-    description: "Simulated patron arrival at desk S015",
+    timestamp: "14m ago",
+    type: "NOISE_WARNING",
+    entityId: "ZN-03A",
+    description: "Acoustic level estimated at 61.2 dB [DEMO / UNCALIBRATED]",
     dataOrigin: "DEMO",
   },
   {
     id: "act-06",
-    timestamp: "17m ago",
-    type: "NOISE_WARNING",
-    entityId: "ZN-03A",
-    description: "Acoustic level reached 61.2 dB (Threshold: 68.0 dB)",
-    dataOrigin: "DEMO",
-  },
-  {
-    id: "act-07",
-    timestamp: "24m ago",
+    timestamp: "21m ago",
     type: "EXIT",
     entityId: "FL01-GATE-01",
-    description: "Simulated turnstile exit recorded",
+    description: "Turnstile exit recorded [DEMO simulation]",
     dataOrigin: "DEMO",
   },
 ];
@@ -715,10 +714,11 @@ export const INITIAL_KPIS: KpiMetrics = {
   totalSeats: 48,
   hardwareMonitoredSeats: 2,
   demoSimulatedSeats: 46,
-  occupiedSeats: 29,
-  availableSeats: 19,
+  occupiedSeats: 28,
+  availableSeats: 20,
   offlineSeats: 0,
-  currentNoiseLevelDb: 52.4, // Real physical reading from INMP441 on Zone 1A
+  currentNoiseLevelDb: 52.4, // Baseline estimate; labeled estimated
+  isNoiseEstimated: true,
   noiseThresholdLimitDb: 55.0,
   noiseStatus: "NORMAL",
 };

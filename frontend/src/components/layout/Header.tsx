@@ -53,7 +53,7 @@ export const Header: React.FC = () => {
         
         {/* LEFT: Brand & Product Descriptor */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 rounded bg-forest flex items-center justify-center text-white font-bold text-sm shadow-sm">
+          <div className="w-8 h-8 rounded bg-forest flex items-center justify-center text-white font-bold text-sm shadow-xs">
             <Building2 className="w-4 h-4 text-surface-warm" />
           </div>
           <div className="flex flex-col">
@@ -61,7 +61,7 @@ export const Header: React.FC = () => {
               <span className="font-bold text-base tracking-tight text-forest-dark font-sans">
                 SILENTRA
               </span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.2 rounded bg-forest/10 text-forest border border-forest/20">
+              <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.2 rounded bg-surface-grey text-surface-charcoal/70 border border-surface-border">
                 v0.1.0
               </span>
             </div>
@@ -72,35 +72,47 @@ export const Header: React.FC = () => {
         </div>
 
         {/* CENTER: Connectivity Indicators & Operation Mode */}
-        <div className="hidden lg:flex items-center gap-2 border-x border-surface-border px-4 py-1">
+        <div className="hidden lg:flex items-center gap-3 border-x border-surface-border px-4 py-1">
           {/* MQTT Broker Status */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isBrokerConnected ? 'bg-status-available animate-pulse' : 'bg-status-occupied'}`} />
-            <span className="font-medium text-surface-charcoal/80">Broker:</span>
+            <span 
+              className={`w-2 h-2 rounded-full ${
+                isBrokerConnected 
+                  ? 'bg-status-available animate-pulse' 
+                  : 'bg-status-offline'
+              }`} 
+            />
+            <span className="text-surface-charcoal/70">Broker:</span>
             <span className="text-surface-charcoal font-semibold">
-              {isBrokerConnected ? 'Mosquitto 2.0 (Active)' : 'Disconnected'}
+              {isBrokerConnected ? 'Mosquitto (Connected)' : 'Not Connected / Demo'}
             </span>
           </div>
 
-          <span className="text-surface-border text-sm">|</span>
+          <span className="text-surface-border text-xs">|</span>
 
           {/* ESP32 Hardware Status */}
           <div className="flex items-center gap-1.5 text-xs">
-            <Wifi className={`w-3.5 h-3.5 ${isEsp32Online ? 'text-forest' : 'text-status-occupied'}`} />
-            <span className="font-medium text-surface-charcoal/80">Hardware:</span>
+            <Wifi 
+              className={`w-3.5 h-3.5 ${
+                isEsp32Online 
+                  ? 'text-forest' 
+                  : 'text-status-offline'
+              }`} 
+            />
+            <span className="text-surface-charcoal/70">ESP32:</span>
             <span className="text-surface-charcoal font-semibold">
-              {isEsp32Online ? 'ESP32 DevKit V1 (Online)' : 'Offline'}
+              {isEsp32Online ? 'ESP32-01 (Online)' : 'Not Connected / Demo'}
             </span>
           </div>
 
-          <span className="text-surface-border text-sm">|</span>
+          <span className="text-surface-border text-xs">|</span>
 
           {/* Operational Mode Tag */}
           <div className="flex items-center gap-1.5 text-xs">
-            <Activity className="w-3.5 h-3.5 text-forest" />
-            <span className="font-medium text-surface-charcoal/80">Mode:</span>
-            <span className="font-bold text-forest bg-forest/10 px-1.5 py-0.5 rounded text-[10px] tracking-wide uppercase border border-forest/20">
-              {appMode} (2 Real · 46 Demo)
+            <Activity className="w-3.5 h-3.5 text-surface-charcoal/60" />
+            <span className="text-surface-charcoal/70">Mode:</span>
+            <span className="font-bold text-surface-charcoal bg-surface-grey px-2 py-0.5 rounded text-[10px] tracking-wide uppercase border border-surface-border">
+              {appMode}
             </span>
           </div>
         </div>
@@ -110,7 +122,7 @@ export const Header: React.FC = () => {
           {/* Refresh Data Button */}
           <button
             onClick={refreshData}
-            title="Synchronize Live Telemetry"
+            title="Refresh View"
             className="p-1.5 rounded hover:bg-surface-grey text-surface-charcoal/70 hover:text-forest transition-colors border border-surface-border"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -124,15 +136,15 @@ export const Header: React.FC = () => {
 
           {/* Administrator Profile */}
           <div className="flex items-center gap-2 pl-2 border-l border-surface-border">
-            <div className="w-7 h-7 rounded bg-forest-dark text-white flex items-center justify-center text-xs font-semibold">
-              SC
+            <div className="w-7 h-7 rounded bg-forest text-white flex items-center justify-center text-xs font-semibold">
+              LA
             </div>
             <div className="hidden xl:flex flex-col text-left">
-              <span className="text-xs font-medium text-surface-charcoal leading-none">
-                Dr. Sarah Chen
+              <span className="text-xs font-semibold text-surface-charcoal leading-none">
+                Library Administrator
               </span>
               <span className="text-[10px] text-surface-charcoal/60 leading-tight">
-                Chief Librarian · Admin
+                Operations Console
               </span>
             </div>
           </div>

@@ -12,7 +12,7 @@ import {
 export const KpiSection: React.FC = () => {
   const { kpis } = useLibraryStore();
 
-  const occupancyRate = ((kpis.occupiedSeats / (kpis.totalSeats || 1)) * 100).toFixed(1);
+  const occupancyRate = ((kpis.occupiedSeats / (kpis.totalSeats || 1)) * 100).toFixed(0);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -20,27 +20,27 @@ export const KpiSection: React.FC = () => {
       <KpiCard
         label="People Inside"
         value={kpis.peopleInside}
-        subValue={`Capacity: ${kpis.maxBuildingCapacity} (${((kpis.peopleInside / kpis.maxBuildingCapacity) * 100).toFixed(0)}% building load)`}
+        subValue={`Building limit: ${kpis.maxBuildingCapacity} (${((kpis.peopleInside / kpis.maxBuildingCapacity) * 100).toFixed(0)}% load)`}
         icon={Users}
-        trend={{ text: "+6 in last hour", isPositive: true }}
+        trend={{ text: "Net +6/hr", isPositive: true }}
       />
 
       {/* 2. Total Monitored Seats */}
       <KpiCard
-        label="Total Monitored Seats"
+        label="Monitored Seats"
         value={kpis.totalSeats}
-        subValue={`${kpis.hardwareMonitoredSeats} Hardware (ESP32) · ${kpis.demoSimulatedSeats} Demo`}
+        subValue={`${kpis.hardwareMonitoredSeats} Hardware Target · ${kpis.demoSimulatedSeats} Demo`}
         icon={Armchair}
-        trend={{ text: "Across 3 Floors", isNeutral: true }}
+        trend={{ text: "3 Floors", isNeutral: true }}
       />
 
       {/* 3. Occupied Seats */}
       <KpiCard
         label="Occupied Seats"
         value={kpis.occupiedSeats}
-        subValue={`${occupancyRate}% utilization rate`}
+        subValue={`${occupancyRate}% utilization (Demo baseline)`}
         icon={UserCheck}
-        trend={{ text: "29 In Use", isNeutral: true }}
+        trend={{ text: "In Use", isNeutral: true }}
       />
 
       {/* 4. Available Seats */}
@@ -49,18 +49,23 @@ export const KpiSection: React.FC = () => {
         value={kpis.availableSeats}
         subValue={`${kpis.availableSeats} desks ready for study`}
         icon={UserX}
-        trend={{ text: "1 Hardware · 18 Demo", isPositive: true }}
+        trend={{ text: "Ready", isPositive: true }}
       />
 
-      {/* 5. Current Noise Level */}
+      {/* 5. Current Noise Level (EXPLICITLY LABELED ESTIMATED / DEMO) */}
       <KpiCard
         label="Acoustic Noise Level"
         value={`${kpis.currentNoiseLevelDb.toFixed(1)} dB`}
-        subValue={`Limit: ${kpis.noiseThresholdLimitDb} dB (INMP441 I2S)`}
+        subValue="Ambient Baseline (Limit: 55 dB)"
         icon={Volume2}
+        badge={
+          <span className="text-[9px] font-semibold text-surface-charcoal/70 bg-surface-grey px-1.5 py-0.5 rounded border border-surface-border uppercase">
+            ESTIMATED
+          </span>
+        }
         trend={{ 
-          text: kpis.noiseStatus === 'NORMAL' ? 'Optimal (Quiet)' : 'Threshold Warning',
-          isPositive: kpis.noiseStatus === 'NORMAL'
+          text: "Quiet Baseline",
+          isPositive: true
         }}
       />
     </div>

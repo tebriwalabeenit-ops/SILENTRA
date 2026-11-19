@@ -31,8 +31,8 @@ export const AppLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-status-available" />
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${appMode === 'DEMO' ? 'bg-status-offline' : 'bg-status-available'}`} />
               Runtime: <strong className="font-mono text-surface-charcoal">{appMode}</strong>
             </span>
             <span className="text-surface-border">|</span>

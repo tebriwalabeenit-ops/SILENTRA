@@ -31,13 +31,14 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        "bg-white border border-surface-border rounded p-3 transition-colors",
+        "bg-white border border-surface-border rounded p-3.5 flex flex-col justify-between transition-colors shadow-2xs",
         onClick ? "cursor-pointer hover:border-forest/40 hover:bg-surface-grey/30" : "",
         className
       )}
     >
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <span className="text-xs font-medium text-surface-charcoal/70 uppercase tracking-wider truncate">
+      {/* Top Row: Label, Icon, Badge */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-[11px] font-semibold text-surface-charcoal/80 uppercase tracking-wider truncate">
           {label}
         </span>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -48,14 +49,15 @@ export const KpiCard: React.FC<KpiCardProps> = ({
         </div>
       </div>
 
-      <div className="flex items-baseline justify-between gap-2">
-        <div className="text-2xl font-semibold tracking-tight text-surface-charcoal">
+      {/* Middle Row: Primary Metric & Trend */}
+      <div className="flex items-baseline justify-between gap-2 my-0.5">
+        <div className="text-2xl font-bold tracking-tight text-surface-charcoal">
           {value}
         </div>
         {trend && (
           <span
             className={cn(
-              "text-[11px] font-medium shrink-0",
+              "text-[11px] font-semibold shrink-0",
               trend.isNeutral
                 ? "text-surface-charcoal/60"
                 : trend.isPositive
@@ -68,8 +70,9 @@ export const KpiCard: React.FC<KpiCardProps> = ({
         )}
       </div>
 
+      {/* Bottom Row: Contextual Secondary Subtitle */}
       {subValue && (
-        <p className="text-[11px] text-surface-charcoal/60 mt-1 truncate">
+        <p className="text-[11px] text-surface-charcoal/70 mt-1 truncate">
           {subValue}
         </p>
       )}

@@ -54,8 +54,8 @@ export const OccupancySummary: React.FC = () => {
 
       {/* Zone-wise Table Summary */}
       <div className="mt-4 pt-3 border-t border-surface-border">
-        <span className="text-[10px] font-bold text-surface-charcoal/60 uppercase tracking-wider block mb-2">
-          Active Zone Capacity
+        <span className="text-[10px] font-bold text-surface-charcoal/70 uppercase tracking-wider block mb-2">
+          Zone Capacity & Ambient Noise
         </span>
         <div className="space-y-1.5 text-xs">
           {zones.map((zone) => {
@@ -66,22 +66,26 @@ export const OccupancySummary: React.FC = () => {
                 className="flex items-center justify-between p-1.5 rounded bg-surface-grey/40 hover:bg-surface-grey/80 transition-colors"
               >
                 <div className="flex items-center gap-1.5 truncate">
-                  <span className="font-semibold text-surface-charcoal truncate">
+                  <span className="font-medium text-surface-charcoal truncate">
                     {zone.name}
                   </span>
-                  {isHw && (
+                  {isHw ? (
                     <span className="text-[9px] font-bold text-forest bg-forest/10 px-1 py-0.2 rounded border border-forest/20 shrink-0">
                       2 HW SEATS
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-medium text-surface-charcoal/50 bg-white px-1 py-0.2 rounded border border-surface-border shrink-0">
+                      DEMO
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 font-mono text-[11px]">
-                  <span className="text-surface-charcoal font-medium">
+                  <span className="text-surface-charcoal font-semibold">
                     {zone.occupiedCount}/{zone.capacity}
                   </span>
-                  <span className="text-surface-charcoal/50">·</span>
-                  <span className={zone.currentDecibels > zone.noiseThresholdDb ? "text-status-occupied font-bold" : "text-forest"}>
-                    {zone.currentDecibels} dB
+                  <span className="text-surface-charcoal/40">·</span>
+                  <span className="text-surface-charcoal/70" title="Estimated noise baseline">
+                    {zone.currentDecibels} dB <span className="text-[9px] text-surface-charcoal/50">(Est)</span>
                   </span>
                 </div>
               </div>

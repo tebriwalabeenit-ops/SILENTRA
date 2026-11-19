@@ -37,6 +37,12 @@ export type DataOrigin =
   | 'DEMO' 
   | 'MANUAL';
 
+export type AppMode = 
+  | 'HYBRID' 
+  | 'HARDWARE_ONLY' 
+  | 'SIMULATION_ONLY' 
+  | 'DEMO';
+
 export type ViewMode = 
   | '2d' 
   | '3d' 
@@ -57,6 +63,7 @@ export interface Zone {
   zoneType: ZoneType;
   noiseThresholdDb: number;
   currentDecibels: number;
+  isNoiseEstimated: boolean;
   capacity: number;
   occupiedCount: number;
   isViolatingNoise: boolean;
@@ -99,7 +106,7 @@ export interface SensorAssignment {
   sensorType: string;
   pinOrChannel: string;
   targetDescription: string;
-  status: 'HEALTHY' | 'WARNING' | 'ERROR';
+  status: 'HEALTHY' | 'STANDBY' | 'WARNING' | 'ERROR';
 }
 
 export interface HardwareDevice {
@@ -110,9 +117,10 @@ export interface HardwareDevice {
   firmwareVersion: string;
   floorId: string;
   status: 'ONLINE' | 'OFFLINE' | 'DEGRADED';
-  wifiRssiDbm: number;
-  freeHeapBytes: number;
-  uptimeSeconds: number;
+  connectionStatus: 'CONNECTED' | 'NOT_CONNECTED';
+  wifiRssiDbm: number | null;
+  freeHeapBytes: number | null;
+  uptimeSeconds: number | null;
   lastSeenAt: string;
   assignedSensors: SensorAssignment[];
 }
@@ -136,6 +144,7 @@ export interface KpiMetrics {
   availableSeats: number;
   offlineSeats: number;
   currentNoiseLevelDb: number;
+  isNoiseEstimated: boolean;
   noiseThresholdLimitDb: number;
   noiseStatus: 'NORMAL' | 'ELEVATED' | 'CRITICAL';
 }

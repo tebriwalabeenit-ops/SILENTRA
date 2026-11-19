@@ -1,5 +1,11 @@
 /**
  * SILENTRA — Central Reactive State Management (Zustand)
+ * 
+ * STRICT DATA INTEGRITY:
+ * - Operates in DEMO mode when no verified hardware connection exists.
+ * - Hardware-bound seats cannot be modified through UI clicks; their state
+ *   is strictly driven by verified physical sensor telemetry.
+ * - Simulation controls only operate on demo seats.
  */
 
 import { create } from 'zustand';
@@ -11,7 +17,8 @@ import {
   RecentActivity, 
   KpiMetrics, 
   ViewMode, 
-  SeatStatus 
+  SeatStatus,
+  AppMode
 } from '../types';
 import { 
   INITIAL_FLOORS, 
@@ -24,7 +31,7 @@ import {
 
 interface LibraryState {
   // Operational Mode
-  appMode: 'HYBRID' | 'HARDWARE_ONLY' | 'SIMULATION_ONLY';
+  appMode: AppMode;
   
   // Navigation & Selection
   selectedFloorId: string;
@@ -52,12 +59,13 @@ interface LibraryState {
   setFilterStatus: (status: 'ALL' | SeatStatus) => void;
   selectSeat: (seatId: string | null) => void;
   hoverSeat: (seatId: string | null) => void;
-  toggleSeatOccupancy: (seatId: string) => void;
+  simulateDemoSeatToggle: (seatId: string) => void;
   refreshData: () => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set) => ({
-  appMode: 'HYBRID',
+  // When no verified hardware connection exists, defaults to DEMO mode
+  appMode: 'DEMO',
   selectedFloorId: 'floor-1',
   viewMode: '2d',
   filterStatus: 'ALL',
@@ -71,8 +79,9 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   activities: INITIAL_ACTIVITIES,
   kpis: INITIAL_KPIS,
 
-  isBrokerConnected: true,
-  isEsp32Online: true,
+  // Not connected until live hardware socket / MQTT is verified
+  isBrokerConnected: false,
+  isEsp32Online: false,
   lastSyncTimestamp: new Date().toLocaleTimeString(),
 
   setSelectedFloorId: (floorId) => set({ selectedFloorId: floorId, selectedSeatId: null }),
@@ -85,10 +94,25 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   
   hoverSeat: (seatId) => set({ hoveredSeatId: seatId }),
 
-  toggleSeatOccupancy: (seatId) => set((state) => {
+  /**
+   * Explicit simulation control for DEMO seats only.
+   * Hardware-bound seats are strictly guarded and cannot be toggled manually.
+   */
+  simulateDemoSeatToggle: (seatId) => set((state) => {
+    const targetSeat = state.seats.find((s) => s.id === seatId);
+    if (!targetSeat) return state;
+
+    // Strict guard: NEVER modify hardware-bound entities through UI simulation
+    if (targetSeat.isMonitoredByHardware) {
+      console.warn(`[SILENTRA Data Integrity] Seat ${targetSeat.seatCode} is hardware-bound. Manual simulation rejected.`);
+      return state;
+    }
+
+    const nextStatus: SeatStatus = targetSeat.status === 'AVAILABLE' ? 'OCCUPIED' : 'AVAILABLE';
+    const isNowOccupied = nextStatus === 'OCCUPIED';
+
     const updatedSeats = state.seats.map((seat) => {
       if (seat.id === seatId) {
-        const nextStatus: SeatStatus = seat.status === 'AVAILABLE' ? 'OCCUPIED' : 'AVAILABLE';
         return {
           ...seat,
           status: nextStatus,
@@ -98,25 +122,18 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       return seat;
     });
 
-    const targetSeat = updatedSeats.find((s) => s.id === seatId);
-    if (!targetSeat) return state;
-
-    const isNowOccupied = targetSeat.status === 'OCCUPIED';
-
-    // Update KPIs
+    // Recompute seat KPIs
     const newOccupiedCount = updatedSeats.filter((s) => s.status === 'OCCUPIED').length;
     const newAvailableCount = updatedSeats.filter((s) => s.status === 'AVAILABLE').length;
 
-    // Create Activity Log Entry
+    // Log explicit DEMO activity
     const newActivity: RecentActivity = {
       id: `act-${Date.now()}`,
       timestamp: 'Just now',
       type: isNowOccupied ? 'SEAT_OCCUPIED' : 'SEAT_VACATED',
       entityId: targetSeat.seatCode,
-      description: targetSeat.isMonitoredByHardware
-        ? `Hardware switch ${isNowOccupied ? 'closed' : 'opened'} on ${targetSeat.seatCode} (Real ESP32 Trigger)`
-        : `Simulated seat state toggled to ${targetSeat.status} (Manual UI Test)`,
-      dataOrigin: targetSeat.dataOrigin,
+      description: `Simulated seat ${targetSeat.seatCode} state updated to ${nextStatus} [DEMO simulation]`,
+      dataOrigin: 'DEMO',
     };
 
     return {
@@ -138,9 +155,9 @@ export const useLibraryStore = create<LibraryState>((set) => ({
         id: `act-${Date.now()}`,
         timestamp: 'Just now',
         type: 'HEARTBEAT',
-        entityId: 'SYS-MONITOR',
-        description: 'Facility status re-synchronized across 3 floors and 48 monitored points',
-        dataOrigin: 'HARDWARE',
+        entityId: 'SYS-SYNC',
+        description: 'Facility status refreshed [DEMO mode]',
+        dataOrigin: 'DEMO',
       },
       ...state.activities.slice(0, 19),
     ],

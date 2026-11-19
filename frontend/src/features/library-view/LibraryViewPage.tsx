@@ -5,24 +5,17 @@ import { SectionPlaceholder } from '../../components/common/SectionPlaceholder';
 export const LibraryViewPage: React.FC = () => {
   return (
     <SectionPlaceholder
-      title="Dedicated 3D & 2D Library Digital Twin"
-      subtitle="Interactive isometric Three.js viewport synchronized with 2D architectural CAD floor blueprints."
+      title="Interactive Library Environment — Under Development"
+      subtitle="Dedicated 3D spatial viewport and synchronized 2D architectural representation scheduled for Phase 3."
       icon={Box}
-      targetPhase="Phase 3: Unified 2D/3D Library View"
-      actionLabel="Full 3D Engine Locked"
-      metricsPreview={[
-        { label: "Active 3D Meshes", value: "48 Procedural Chairs" },
-        { label: "Default Camera", value: "Isometric (45° / 35.2°)" },
-        { label: "Sync Latency", value: "< 16ms (WebSockets)" },
-        { label: "Heatmap Resolution", value: "1m Vertex Grid" },
-      ]}
+      targetPhase="Phase 3: 3D Scene Implementation"
       scheduledFeatures={[
-        "Full Three.js / React Three Fiber / Drei spatial scene canvas with orbit, pan, and zoom controls.",
-        "Single-source-of-truth 2D CAD floor plan projection mapping directly into 3D Cartesian space.",
-        "Hover preview tooltips and collapsible right-side seat detail panel with student allocations.",
-        "Dynamic procedural materials reflecting real-time states (Available, Occupied, Sensor Offline).",
-        "Acoustic noise dB SPL vertex shader gradient heatmap overlaid directly onto the 3D floor mesh.",
-        "Camera reset to default isometric coordinate, zone isolation clipping, and full-screen workspace mode."
+        "Three.js / React Three Fiber scene graph utilizing 2D floor plans as geometric ground truth.",
+        "Default isometric camera projection with free orbit, pan, zoom, and reset controls.",
+        "Real-time seat mesh state reflections driven by verified sensor and simulation events.",
+        "Acoustic noise intensity heatmap overlay mapped to architectural zone boundaries.",
+        "Interactive hover preview tooltips and collapsible seat property inspector panel.",
+        "Clean fullscreen mode and floor level isolation controls."
       ]}
     />
   );

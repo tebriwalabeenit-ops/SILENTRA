@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;      /* #FAFAF7 Warm White */
+    --foreground: 150 7% 15%;      /* #252B28 Charcoal */
+    --card: 0 0% 100%;
+    --card-foreground: 150 7% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 7% 15%;
+    --primary: 156 43% 25%;        /* #245B45 Forest Green */
+    --primary-foreground: 40 20% 98%;
+    --secondary: 100 6% 95%;       /* #F1F3F0 Surface Grey */
+    --secondary-foreground: 150 7% 15%;
+    --muted: 100 6% 95%;
+    --muted-foreground: 150 4% 45%;
+    --accent: 156 43% 25%;
+    --accent-foreground: 40 20% 98%;
+    --destructive: 0 65% 60%;      /* #D95757 Occupied / Alert */
+    --destructive-foreground: 40 20% 98%;
+    --border: 110 8% 88%;          /* #DDE2DC Border Grey */
+    --input: 110 8% 88%;
+    --ring: 156 43% 25%;
+    --radius: 0.25rem;             /* Restrained enterprise radii */
+  }
+
+  body {
+    background-color: #FAFAF7;
+    color: #252B28;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Scrollbar for dense enterprise tables and viewports */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F3F0;
+}
+::-webkit-scrollbar-thumb {
+  background: #DDE2DC;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #245B45;
+}

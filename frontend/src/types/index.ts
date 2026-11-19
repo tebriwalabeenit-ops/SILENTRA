@@ -1,5 +1,5 @@
 /**
- * SILENTRA — Strict TypeScript Core Domain Interfaces
+ * SILENTRA — Strict Domain & UI Type Definitions
  */
 
 export type SeatStatus = 
@@ -34,8 +34,13 @@ export type AlertType =
 
 export type DataOrigin = 
   | 'HARDWARE' 
-  | 'SIMULATION' 
+  | 'DEMO' 
   | 'MANUAL';
+
+export type ViewMode = 
+  | '2d' 
+  | '3d' 
+  | 'heatmap';
 
 export interface FloorGeometry {
   widthMeters: number;
@@ -50,26 +55,29 @@ export interface Zone {
   zoneCode: string;
   name: string;
   zoneType: ZoneType;
-  boundaryPolygon: Array<{ x: number; y: number }>;
   noiseThresholdDb: number;
+  currentDecibels: number;
   capacity: number;
-  currentDecibels?: number;
+  occupiedCount: number;
+  isViolatingNoise: boolean;
 }
 
 export interface Seat {
   id: string;
   floorId: string;
   zoneId: string;
+  zoneName: string;
   seatCode: string;
-  coordX: number;
-  coordY: number;
+  coordX: number; // in meters (0 to width)
+  coordY: number; // in meters (0 to length)
   rotationDeg: number;
   seatType: SeatType;
   hasPowerOutlet: boolean;
   status: SeatStatus;
   isMonitoredByHardware: boolean;
   isSimulated: boolean;
-  lastOccupiedTimestamp?: string;
+  dataOrigin: DataOrigin;
+  lastStatusChange: string;
   allocatedStudentName?: string;
 }
 
@@ -79,39 +87,55 @@ export interface Floor {
   name: string;
   widthMeters: number;
   lengthMeters: number;
-  floorGeometry: FloorGeometry;
   maxCapacity: number;
   currentHeadcount: number;
+  totalSeats: number;
+  occupiedSeats: number;
+  availableSeats: number;
   isActive: boolean;
 }
 
-export interface NoiseTelemetry {
-  zoneId: string;
+export interface SensorAssignment {
+  sensorType: string;
+  pinOrChannel: string;
+  targetDescription: string;
+  status: 'HEALTHY' | 'WARNING' | 'ERROR';
+}
+
+export interface HardwareDevice {
+  id: string;
+  deviceCode: string;
+  macAddress: string;
+  ipAddress: string;
+  firmwareVersion: string;
   floorId: string;
-  decibelSpl: number;
-  peakSpl: number;
-  thresholdLimitDb: number;
-  isViolation: boolean;
+  status: 'ONLINE' | 'OFFLINE' | 'DEGRADED';
+  wifiRssiDbm: number;
+  freeHeapBytes: number;
+  uptimeSeconds: number;
+  lastSeenAt: string;
+  assignedSensors: SensorAssignment[];
+}
+
+export interface RecentActivity {
+  id: string;
   timestamp: string;
+  type: 'ENTRY' | 'EXIT' | 'SEAT_OCCUPIED' | 'SEAT_VACATED' | 'NOISE_WARNING' | 'HEARTBEAT';
+  entityId: string;
+  description: string;
   dataOrigin: DataOrigin;
 }
 
-export interface HeadcountSummary {
-  floorId: string;
-  totalInLibrary: number;
-  floorOccupancy: number;
-  floorCapacity: number;
-  occupancyPercentage: number;
-}
-
-export interface Alert {
-  id: string;
-  alertType: AlertType;
-  severity: AlertSeverity;
-  floorId?: string;
-  zoneId?: string;
-  seatId?: string;
-  message: string;
-  isAcknowledged: boolean;
-  createdAt: string;
+export interface KpiMetrics {
+  peopleInside: number;
+  maxBuildingCapacity: number;
+  totalSeats: number;
+  hardwareMonitoredSeats: number;
+  demoSimulatedSeats: number;
+  occupiedSeats: number;
+  availableSeats: number;
+  offlineSeats: number;
+  currentNoiseLevelDb: number;
+  noiseThresholdLimitDb: number;
+  noiseStatus: 'NORMAL' | 'ELEVATED' | 'CRITICAL';
 }

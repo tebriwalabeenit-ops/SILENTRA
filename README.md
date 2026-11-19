@@ -17,7 +17,7 @@ SILENTRA is an enterprise-grade Smart Library Intelligence and Monitoring System
 
 ## 2. Technology Stack
 
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide React
+- **Frontend**: React 18/19, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide React, React Router, Zustand
 - **3D Spatial Visualization**: Three.js, React Three Fiber, Drei
 - **Backend**: Python 3.12+, FastAPI, SQLAlchemy 2.0 (Async), Pydantic v2
 - **Database & Migrations**: PostgreSQL 16 (with SQLite async local fallback), Alembic
@@ -35,6 +35,10 @@ SILENTRA is an enterprise-grade Smart Library Intelligence and Monitoring System
 - **Surface Grey**: `#F1F3F0`
 - **Charcoal**: `#252B28`
 - **Border Grey**: `#DDE2DC`
+- **Occupied**: `#D95757`
+- **Available**: `#39966A`
+- **Noise Warning**: `#D9A441`
+- **Offline**: `#929B96`
 - **Typography**: Inter
 - **Navigation**: Horizontal tabs (Overview, Library View, Floor Management, Seats & Users, Noise Monitoring, Analytics, Reports, Settings). No permanent left sidebar.
 
@@ -56,16 +60,17 @@ LIBRARY_SEATING/
 │   ├── alembic/              # Database migration versions
 │   ├── Dockerfile
 │   └── requirements.txt
-├── frontend/                 # React 19 + TypeScript + Vite + Three.js SPA
+├── frontend/                 # React 18/19 + TypeScript + Vite + Tailwind CSS SPA
 │   ├── src/
-│   │   ├── components/       # shadcn/ui primitives & layout components
-│   │   ├── features/         # Feature modules per navigation tab
-│   │   │   └── library-view/ # 2D architectural & 3D R3F digital twin
-│   │   ├── hooks/            # WebSocket & data query hooks
-│   │   ├── store/            # Zustand global state
-│   │   └── types/            # Strict TypeScript interfaces
+│   │   ├── components/       # Layout (Header, HorizontalNav), common badges & cards
+│   │   ├── features/         # Overview dashboard, Library view, Settings, etc.
+│   │   ├── data/             # Strict hardware vs demo data provider
+│   │   ├── store/            # Zustand reactive state store
+│   │   └── types/            # Strict TypeScript domain interfaces
 │   ├── Dockerfile
 │   ├── package.json
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
 │   └── vite.config.ts
 ├── firmware/                 # ESP32 C++ firmware
 │   └── esp32/
@@ -93,3 +98,23 @@ LIBRARY_SEATING/
 - [MQTT Protocol & Payload Specification](file:///c:/Users/Beenit/OneDrive/Desktop/LIBRARY_SEATING/docs/mqtt-specification.md)
 - [REST API & WebSocket Specification](file:///c:/Users/Beenit/OneDrive/Desktop/LIBRARY_SEATING/docs/api-specification.md)
 - [Implementation Roadmap](file:///c:/Users/Beenit/OneDrive/Desktop/LIBRARY_SEATING/docs/roadmap.md)
+
+---
+
+## 6. Frontend Quickstart (Phase 1)
+
+The frontend is a Vite + React + TypeScript single-page application located in `frontend/`.
+
+```bash
+# 1. Navigate to the frontend directory
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Run development server (accessible at http://localhost:5173)
+npm run dev
+
+# 4. Typecheck and build production bundle
+npm run build
+```

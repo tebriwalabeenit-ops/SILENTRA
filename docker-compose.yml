@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # ==============================================================================
+  # Database: PostgreSQL 16
+  # ==============================================================================
+  db:
+    image: postgres:16-alpine
+    container_name: silentra_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-silentra_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-silentra_password}
+      POSTGRES_DB: ${POSTGRES_DB:-silentra_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U silentra_user -d silentra_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - silentra_network
+
+  # ==============================================================================
+  # Message Broker: Eclipse Mosquitto (MQTT 3.1.1 / 5.0 + WebSockets)
+  # ==============================================================================
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: silentra_mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"   # Standard MQTT port for ESP32 and Backend
+      - "9001:9001"   # MQTT over WebSockets
+    volumes:
+      - ./deploy/mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - silentra_network
+
+  # ==============================================================================
+  # Backend API & IoT Ingestion: FastAPI + AsyncPG + asyncio MQTT
+  # ==============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: silentra_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-silentra_user}:${POSTGRES_PASSWORD:-silentra_password}@db:5432/${POSTGRES_DB:-silentra_db}
+      - MQTT_BROKER_HOST=mqtt
+      - MQTT_BROKER_PORT=1883
+      - APP_MODE=${APP_MODE:-HYBRID}
+      - USE_SQLITE_FALLBACK=false
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - silentra_network
+
+  # ==============================================================================
+  # Frontend Application: React + Vite + Tailwind CSS + Three.js
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: silentra_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - silentra_network
+
+volumes:
+  pgdata:
+  mosquitto_data:
+  mosquitto_log:
+
+networks:
+  silentra_network:
+    driver: bridge
